@@ -3,9 +3,33 @@
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#a95019}body{font-family:Arial,sans-serif}.stage{position:relative;width:min(100vw,calc(100vh * 2 / 3));margin:0 auto;line-height:0}.art{display:block;width:100%;height:auto}.hot{position:absolute;left:28%;width:44%;border:0;border-radius:22px;background:transparent;box-shadow:none;cursor:pointer;padding:0;line-height:normal;min-height:0}.hot:focus-visible{outline:3px solid #fff;outline-offset:2px;background:#ffffff18}.mine{top:36.2%;height:9.2%}.ad{top:48.1%;height:8.8%}.progress{top:58.6%;height:8.8%}.settings{top:68.5%;height:7.4%}.about{top:77.2%;height:7.4%}.live{position:absolute;color:#fff3a5;font:bold clamp(9px,2.5vw,16px) Arial;text-shadow:1px 2px 2px #421b08;line-height:1.1;white-space:nowrap}.player{left:11%;top:6.3%;width:18%;text-align:center}.balance{right:11%;top:6.3%;width:18%;text-align:center}.hint{position:absolute;left:8%;right:8%;bottom:1.2%;font:10px/1.4 Arial;color:#fff5d5;text-align:center;text-shadow:1px 1px 3px #351407;background:#54270fc9;border-radius:8px;padding:4px}
 </style></head><body><main class="stage"><img class="art" src="./Interface%20de%20mine%20d%E2%80%99or%20du%20Sahara.png" alt="Sahara Gold Mining desert game screen"><div class="live player" id="player">Telegram ID</div><div class="live balance" id="balance">-- DRJ</div>
-<button class="hot mine" aria-label="Start Mining" id="mine"></button><button class="hot ad" aria-label="Watch Ad and Earn" id="ad"></button><button class="hot progress" aria-label="Your Progress" id="progress"></button><button class="hot settings" aria-label="Settings" id="settings"></button><button class="hot about" aria-label="About" id="about"></button><div class="hint">الأزرار تجريبية حالياً؛ التعدين والإعلانات والرصيد الحقيقي غير مفعّلة بعد</div></main>
+<button class="hot mine" aria-label="Start Mining" id="mine"></button><button class="hot ad" aria-label="Watch Ad and Earn" id="ad"></button><button class="hot progress" aria-label="Your Progress" id="progress"></button><button class="hot settings" aria-label="Settings" id="settings"></button><button class="hot about" aria-label="About" id="about"></button><div class="hint" id="hint">جارٍ الاتصال بالخادم...</div></main>
 <script>
-const tg=window.Telegram?.WebApp;if(tg){tg.ready();tg.expand();const u=tg.initDataUnsafe?.user;if(u)document.getElementById('player').textContent='ID: '+u.id;}
+const API_BASE='https://innocent-arnold-searches-winning.trycloudflare.com';
+const tg=window.Telegram?.WebApp;
+const hint=document.getElementById('hint');
+let playerData=null;
+if(tg){tg.ready();tg.expand();}
 const tell=m=>tg?tg.showAlert(m):alert(m);
-document.getElementById('mine').onclick=()=>tell('التعدين غير مفعّل بعد، وسيعمل بعد ربط الخادم.');document.getElementById('ad').onclick=()=>tell('الإعلانات والمكافآت قيد الربط والتحقق.');document.getElementById('progress').onclick=()=>tell('سيظهر تقدمك بعد ربط قاعدة البيانات.');document.getElementById('settings').onclick=()=>tell('الإعدادات ستتوفر لاحقاً.');document.getElementById('about').onclick=()=>tell('SAHARA GOLD MINING — DRJ.');
+async function loadPlayer(){
+  if(!tg || !tg.initData){hint.textContent='افتح اللعبة من Telegram لتحميل بيانات حسابك.';return;}
+  try{
+    const response=await fetch(API_BASE+'/api/me',{headers:{Authorization:'tma '+tg.initData}});
+    const data=await response.json();
+    if(!response.ok || !data.ok) throw new Error(data.error||'تعذر التحقق من الحساب');
+    playerData=data;
+    document.getElementById('player').textContent='ID: '+data.user_id+' | LV '+data.level;
+    document.getElementById('balance').textContent=Number(data.balance).toLocaleString()+' '+data.currency;
+    hint.textContent=data.frozen?'الحساب مجمّد؛ يرجى التواصل مع الإدارة.':'تم تحميل بيانات حسابك بنجاح.';
+  }catch(error){
+    hint.textContent=error.message==='invalid_or_expired_init_data'?'بيانات Telegram منتهية؛ أغلق Mini App وافتحها مجدداً.':'تعذر تحميل الحساب. أعد فتح Mini App وحاول مجدداً.';
+    console.error('Player API error:',error);
+  }
+}
+loadPlayer();
+document.getElementById('mine').onclick=()=>tell('التعدين غير مفعّل بعد. الرصيد المعروض هو رصيد تجريبي داخلي.');
+document.getElementById('ad').onclick=()=>tell('الإعلانات والمكافآت لم يتم تفعيلها بعد.');
+document.getElementById('progress').onclick=()=>tell(playerData?'المستوى الحالي: '+playerData.level:'بيانات الحساب لم تُحمّل بعد.');
+document.getElementById('settings').onclick=()=>tell('الإعدادات ستتوفر لاحقاً.');
+document.getElementById('about').onclick=()=>tell('SAHARA GOLD MINING — DRJ. الأرصدة الحالية داخلية وتجريبية وليست توكنات على البلوكشين.');
 </script></body></html>
