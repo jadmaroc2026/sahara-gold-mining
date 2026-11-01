@@ -5,6 +5,7 @@ from config import BOT_TOKEN, ADMIN_ID
 from database import init_db, ensure_user, get_user, claim_daily, grant_signup_referral_rewards
 from services import get_upgrade_cost, upgrade_for_internal_balance
 from admin import admin_summary, user_details, user_ledger, set_frozen, pending_withdrawals, review_withdrawal
+from api_server import start_api, stop_api
 
 logging.basicConfig(level=logging.INFO)
 
@@ -405,7 +406,7 @@ def main():
     if not BOT_TOKEN:
         raise SystemExit("أضف BOT_TOKEN إلى ملف .env قبل التشغيل.")
     init_db()
-    app = Application.builder().token(BOT_TOKEN).build()
+    app = Application.builder().token(BOT_TOKEN).post_init(start_api).post_shutdown(stop_api).build()
     setup_handlers(app)
     print("SAHARA GOLD test bot is running.")
     app.run_polling()
