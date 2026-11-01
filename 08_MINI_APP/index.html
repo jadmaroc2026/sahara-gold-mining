@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10100d">
+<title>SAHARA GOLD MINING</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#10100d;color:#f5d778;font-family:Arial,sans-serif;text-align:center;padding:24px}
+main{max-width:430px;margin:25px auto;background:#1b1a14;border:1px solid #92732c;border-radius:22px;padding:25px}
+h1{font-size:25px;color:#f5d778}
+.logo{font-size:65px;margin:15px}
+.card{background:#292619;border-radius:15px;padding:20px;margin:18px 0}
+.label{color:#c9bd9a;font-size:14px}
+.value{font-size:30px;font-weight:bold;margin-top:8px}
+button{width:100%;padding:15px;border:0;border-radius:12px;background:#d6ad45;color:#17140b;font-size:17px;font-weight:bold;margin-top:12px}
+.note{color:#aaa;font-size:12px;line-height:1.8}
+</style>
+</head>
+<body>
+<main>
+<div class="logo">🏆</div>
+<h1>SAHARA GOLD MINING</h1>
+<p>مرحباً بك في عالم جمع الذهب DRJ</p>
+<div class="card">
+<div class="label">رصيدك</div>
+<div class="value" id="balance">-- DRJ</div>
+</div>
+<div class="card">
+<div class="label">مستواك الحالي</div>
+<div class="value" id="level">-- / 30</div>
+</div>
+<button id="start">⛏️ الدخول إلى التعدين</button>
+<p class="note">نسخة تجريبية. الرصيد والمستوى سيظهران بعد التحقق من حساب Telegram والاتصال الآمن بالخادم. لا تمنح مشاهدة الإعلان مكافأة قبل تأكيدها من السيرفر.</p>
+</main>
+<script>
+const tg=window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();}
+document.getElementById('start').onclick=()=>{
+ if(tg) tg.showAlert('سيتم تفعيل التعدين بعد إكمال الربط الآمن.');
+ else alert('افتح التطبيق من Telegram.');
+};
+</script>
+</body>
+</html>
