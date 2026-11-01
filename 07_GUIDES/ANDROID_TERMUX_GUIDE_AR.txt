@@ -1,0 +1,31 @@
+تشغيل المشروع من Android باستخدام Termux
+
+1) نزّل Termux من مصدره الرسمي:
+https://github.com/termux/termux-app/releases
+
+2) حمّل ملف ZIP إلى مجلد Downloads في الهاتف.
+
+3) افتح Termux واكتب أمراً واحداً في كل مرة:
+
+pkg update -y
+
+ثم:
+pkg install python unzip nano -y
+
+ثم:
+termux-setup-storage
+
+وافق على إذن الملفات.
+
+ثم:
+cd ~/storage/downloads
+
+ثم:
+unzip SAHARA_GOLD_DRJ_Package.zip
+
+ثم:
+cd SAHARA_GOLD_DRJ_Package
+
+ملاحظة: بنية الحزمة موزعة إلى مجلدات. لتشغيل نسخة البوت، اجمع ملفات 01_BOT و02_DATABASE و03_CONFIG و04_ADMIN في مجلد تشغيل واحد أو اتبع تعليمات المساعد في المحادثة؛ لا تشغلها قبل ضبط الاستيرادات ومسارات PYTHONPATH. هذه الحزمة منظمة للمراجعة والتطوير وليست إعداد نشر بنقرة واحدة.
+
+لا تضع الرمز السري في المحادثة. انسخ .env.example إلى .env محلياً وأدخل الرمز الجديد داخله فقط.

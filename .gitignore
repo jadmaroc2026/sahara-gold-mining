@@ -1,0 +1,11 @@
+.env
+**/.env
+*.sqlite3
+*.db
+backups/
+__pycache__/
+*.pyc
+*.zip
+
+# Unknown file
+/c
