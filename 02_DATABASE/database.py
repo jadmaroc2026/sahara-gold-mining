@@ -31,6 +31,10 @@ def init_db():
           created_at TEXT NOT NULL
         );
         ''')
+        columns = {row["name"] for row in db.execute("PRAGMA table_info(users)")}
+        if "last_mining" not in columns:
+            db.execute("ALTER TABLE users ADD COLUMN last_mining TEXT")
+
 
 def ensure_user(uid, username='', first_name='', referrer=None):
     with connect() as db:
