@@ -7,7 +7,7 @@ from urllib.parse import parse_qsl
 
 from aiohttp import web
 from config import BOT_TOKEN
-from database import ensure_user, get_user
+from database import ensure_user, get_user, claim_mining
 
 MAX_AUTH_AGE = 3600
 
@@ -39,6 +39,22 @@ def verify_init_data(init_data):
 async def health(_request):
     return web.json_response({"ok": True, "service": "sahara-api"})
 
+async def mining_claim(request):
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("tma "):
+        return web.json_response({"ok": False, "error": "unauthorized"}, status=401)
+    verified = verify_init_data(auth[4:])
+    if not verified:
+        return web.json_response({"ok": False, "error": "invalid_or_expired_init_data"}, status=401)
+    uid, _tg_user = verified
+    ok, message, amount, remaining = claim_mining(uid)
+    user = get_user(uid)
+    return web.json_response({
+        "ok": ok, "message": message, "amount": amount,
+        "balance": user["balance"], "level": user["level"],
+        "remaining_seconds": remaining, "currency": "DRJ"
+    }, status=200 if ok else 409)
+
 async def me(request):
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("tma "):
@@ -66,7 +82,7 @@ async def cors(request, handler):
         response = await handler(request)
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
-    response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -74,6 +90,7 @@ async def start_api(application):
     app = web.Application(middlewares=[cors])
     app.router.add_get("/health", health)
     app.router.add_get("/api/me", me)
+    app.router.add_post("/api/mining/claim", mining_claim)
     app.router.add_options("/{tail:.*}", health)
     runner = web.AppRunner(app)
     await runner.setup()
