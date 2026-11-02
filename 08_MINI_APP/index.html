@@ -27,7 +27,21 @@ async function loadPlayer(){
   }
 }
 loadPlayer();
-document.getElementById('mine').onclick=()=>tell('التعدين غير مفعّل بعد. الرصيد المعروض هو رصيد تجريبي داخلي.');
+document.getElementById('mine').onclick=async()=>{
+  if(!tg || !tg.initData){tell('افتح اللعبة من Telegram أولاً.');return;}
+  const button=document.getElementById('mine');button.disabled=true;
+  try{
+    const response=await fetch(API_BASE+'/api/mining/claim',{method:'POST',headers:{Authorization:'tma '+tg.initData}});
+    const data=await response.json();
+    if(data.balance!==undefined){
+      document.getElementById('balance').textContent=Number(data.balance).toLocaleString()+' '+data.currency;
+      if(playerData) playerData.level=data.level;
+    }
+    tell(data.message||'تعذر تنفيذ التعدين.');
+    if(data.ok) hint.textContent='تم تسجيل مكافأة التعدين بنجاح.';
+  }catch(error){tell('تعذر الاتصال بالخادم. حاول مجدداً.');}
+  finally{button.disabled=false;}
+};
 document.getElementById('ad').onclick=()=>tell('الإعلانات والمكافآت لم يتم تفعيلها بعد.');
 document.getElementById('progress').onclick=()=>tell(playerData?'المستوى الحالي: '+playerData.level:'بيانات الحساب لم تُحمّل بعد.');
 document.getElementById('settings').onclick=()=>tell('الإعدادات ستتوفر لاحقاً.');
