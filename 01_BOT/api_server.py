@@ -6,8 +6,8 @@ import time
 from urllib.parse import parse_qsl
 
 from aiohttp import web
-from config import BOT_TOKEN
-from database import ensure_user, get_user, claim_mining
+from config import BOT_TOKEN\nPOSTBACK_SECRET = os.getenv('POSTBACK_SECRET', '')\nMONETAG_ZONE_ID = 12166931
+from database import ensure_user, get_user, claim_mining, record_monetag_event
 
 MAX_AUTH_AGE = 3600
 
@@ -55,6 +55,27 @@ async def mining_claim(request):
         "remaining_seconds": remaining, "currency": "DRJ"
     }, status=200 if ok else 409)
 
+
+async def monetag_postback(request):
+    if not POSTBACK_SECRET or not hmac.compare_digest(request.query.get("secret", ""), POSTBACK_SECRET):
+        return web.Response(status=403)
+    q = request.query
+    try:
+        uid = int(q.get("telegram_id", ""))
+        zone_id = int(q.get("zone_id", "0"))
+        sub_zone_raw = q.get("sub_zone_id", "")
+        sub_zone_id = int(sub_zone_raw) if sub_zone_raw else None
+        price = float(q.get("estimated_price", "0"))
+        ymid = q.get("ymid", "")
+    except (ValueError, TypeError):
+        return web.Response(status=400)
+    if (zone_id != MONETAG_ZONE_ID or q.get("event_type") != "impression"
+            or q.get("reward_event_type") != "valued"
+            or not ymid or len(ymid) > 160 or price < 0):
+        return web.Response(status=200)
+    record_monetag_event(uid, ymid, zone_id, sub_zone_id, price)
+    return web.Response(status=200)
+
 async def me(request):
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("tma "):
@@ -88,7 +109,7 @@ async def cors(request, handler):
 
 async def start_api(application):
     app = web.Application(middlewares=[cors])
-    app.router.add_get("/health", health)
+    app.router.add_get("/health", health)\n    app.router.add_get("/postback", monetag_postback)
     app.router.add_get("/api/me", me)
     app.router.add_post("/api/mining/claim", mining_claim)
     app.router.add_options("/{tail:.*}", health)
