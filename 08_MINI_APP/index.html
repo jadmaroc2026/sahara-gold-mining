@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#b66a1c"><title>Sahara Gold Mining</title><script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#a95019}body{font-family:Arial,sans-serif}.stage{position:relative;width:min(100vw,calc(100vh * 2 / 3));margin:0 auto;line-height:0}.art{display:block;width:100%;height:auto}.hot{position:absolute;left:28%;width:44%;border:0;border-radius:22px;background:transparent;box-shadow:none;cursor:pointer;padding:0;line-height:normal;min-height:0}.hot:focus-visible{outline:3px solid #fff;outline-offset:2px;background:#ffffff18}.mine{top:36.2%;height:9.2%}.ad{top:48.1%;height:8.8%}.progress{top:58.6%;height:8.8%}.settings{top:68.5%;height:7.4%}.about{top:77.2%;height:7.4%}.live{position:absolute;color:#fff3a5;font:bold clamp(9px,2.5vw,16px) Arial;text-shadow:1px 2px 2px #421b08;line-height:1.1;white-space:nowrap}.player{left:11%;top:6.3%;width:18%;text-align:center}.balance{right:11%;top:6.3%;width:18%;text-align:center}.hint{position:absolute;left:8%;right:8%;bottom:1.2%;font:10px/1.4 Arial;color:#fff5d5;text-align:center;text-shadow:1px 1px 3px #351407;background:#54270fc9;border-radius:8px;padding:4px}
-</style></head><body><main class="stage"><img class="art" src="./Interface%20de%20mine%20d%E2%80%99or%20du%20Sahara.png" alt="Sahara Gold Mining desert game screen"><div class="live player" id="player">Telegram ID</div><div class="live balance" id="balance">-- DRJ</div>
+</style><script src='//libtl.com/sdk.js' data-zone='12166931' data-sdk='show_12166931'></script>\n</head><body><main class="stage"><img class="art" src="./Interface%20de%20mine%20d%E2%80%99or%20du%20Sahara.png" alt="Sahara Gold Mining desert game screen"><div class="live player" id="player">Telegram ID</div><div class="live balance" id="balance">-- DRJ</div>
 <button class="hot mine" aria-label="Start Mining" id="mine"></button><button class="hot ad" aria-label="Watch Ad and Earn" id="ad"></button><button class="hot progress" aria-label="Your Progress" id="progress"></button><button class="hot settings" aria-label="Settings" id="settings"></button><button class="hot about" aria-label="About" id="about"></button><div class="hint" id="hint">جارٍ الاتصال بالخادم...</div></main>
 <script>
 const API_BASE='https://innocent-arnold-searches-winning.trycloudflare.com';
@@ -42,7 +42,20 @@ document.getElementById('mine').onclick=async()=>{
   }catch(error){tell('تعذر الاتصال بالخادم. حاول مجدداً.');}
   finally{button.disabled=false;}
 };
-document.getElementById('ad').onclick=()=>tell('الإعلانات والمكافآت لم يتم تفعيلها بعد.');
+let adSequence=0;
+document.getElementById('ad').onclick=async()=>{
+  if(!tg || !tg.initData){tell('افتح اللعبة من Telegram أولاً.');return;}
+  const fn=window.show_12166931;
+  if(typeof fn!=='function'){tell('الإعلان لم يجهز بعد. حاول بعد قليل.');return;}
+  const btn=document.getElementById('ad');btn.disabled=true;
+  const ymid='u'+String(playerData?.user_id||'0')+'_a'+Date.now().toString(36)+'_'+(++adSequence);
+  try{
+    const result=await fn({ymid,requestVar:'mining_reward'});
+    if(result?.reward_event_type==='valued') tell('تم تأكيد الإعلان. يتم تسجيل المكافأة عبر الخادم.');
+    else tell('انتهى الإعلان، لكن لم يتم تأكيد أنه مؤهل للمكافأة.');
+  }catch(e){tell('لم يتم تأكيد مشاهدة الإعلان. حاول مرة أخرى.');}
+  finally{btn.disabled=false;}
+};
 document.getElementById('progress').onclick=()=>tell(playerData?'المستوى الحالي: '+playerData.level:'بيانات الحساب لم تُحمّل بعد.');
 document.getElementById('settings').onclick=()=>tell('الإعدادات ستتوفر لاحقاً.');
 document.getElementById('about').onclick=()=>tell('SAHARA GOLD MINING — DRJ. الأرصدة الحالية داخلية وتجريبية وليست توكنات على البلوكشين.');
