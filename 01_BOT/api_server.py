@@ -6,7 +6,10 @@ import time
 from urllib.parse import parse_qsl
 
 from aiohttp import web
-from config import BOT_TOKEN\nPOSTBACK_SECRET = os.getenv('POSTBACK_SECRET', '')\nMONETAG_ZONE_ID = 12166931
+from config import BOT_TOKEN
+
+POSTBACK_SECRET = os.getenv('POSTBACK_SECRET', '')
+MONETAG_ZONE_ID = 12166931
 from database import ensure_user, get_user, claim_mining, record_monetag_event
 
 MAX_AUTH_AGE = 3600
@@ -109,7 +112,8 @@ async def cors(request, handler):
 
 async def start_api(application):
     app = web.Application(middlewares=[cors])
-    app.router.add_get("/health", health)\n    app.router.add_get("/postback", monetag_postback)
+    app.router.add_get("/health", health)
+    app.router.add_get("/postback", monetag_postback)
     app.router.add_get("/api/me", me)
     app.router.add_post("/api/mining/claim", mining_claim)
     app.router.add_options("/{tail:.*}", health)
