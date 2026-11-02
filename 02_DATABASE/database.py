@@ -150,15 +150,27 @@ def claim_mining(uid):
 
 
 def record_monetag_event(uid, ymid, zone_id, sub_zone_id, estimated_price):
-    """Store one paid Monetag impression. Duplicate ymid values are ignored."""
+    """Credit a confirmed Monetag event once; each 15-event cycle pays 5 double and 10 normal rewards."""
     now = datetime.now(timezone.utc).isoformat()
     with connect() as db:
-        user = db.execute("SELECT frozen FROM users WHERE user_id=?", (uid,)).fetchone()
+        db.execute("BEGIN IMMEDIATE")
+        user = db.execute("SELECT frozen, level FROM users WHERE user_id=?", (uid,)).fetchone()
         if not user or user["frozen"]:
-            return False, 0
+            return False, 0, 0, 0
         cur = db.execute(
             "INSERT OR IGNORE INTO monetag_events(ymid,user_id,zone_id,sub_zone_id,estimated_price,created_at) VALUES(?,?,?,?,?,?)",
             (ymid, uid, zone_id, sub_zone_id, estimated_price, now)
         )
         count = db.execute("SELECT COUNT(*) FROM monetag_events WHERE user_id=?", (uid,)).fetchone()[0]
-        return bool(cur.rowcount), count
+        if not cur.rowcount:
+            return False, count, 0, 0
+        level = max(1, min(int(user["level"]), len(MINING_REWARDS)))
+        base = int(MINING_REWARDS[level - 1])
+        position = ((count - 1) % 15) + 1
+        multiplier = 2 if position <= 5 else 1
+        amount = base * multiplier
+        db.execute("UPDATE users SET balance=balance+? WHERE user_id=?", (amount, uid))
+        note = f"Monetag event {count}; cycle position {position}/15; level {level}; x{multiplier}"
+        db.execute("INSERT INTO ledger(user_id,event,amount,note,created_at) VALUES(?,?,?,?,?)",
+                   (uid, "monetag_reward", amount, note, now))
+        return True, count, amount, position
