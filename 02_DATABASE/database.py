@@ -132,6 +132,19 @@ def claim_mining(uid):
         level = max(1, min(int(row["level"]), len(MINING_REWARDS)))
         last = row["last_mining"]
         if last:
+            ads_done = db.execute(
+                "SELECT COUNT(*) FROM monetag_events WHERE user_id=? AND created_at>?",
+                (uid, last)
+            ).fetchone()[0]
+        else:
+            ads_done = db.execute(
+                "SELECT COUNT(*) FROM monetag_events WHERE user_id=?",
+                (uid,)
+            ).fetchone()[0]
+        if ads_done < 15:
+            missing = 15 - ads_done
+            return False, f"خاصك تكمل {missing} مشاهدة إعلان مؤكدة قبل التعدين.", 0, 0
+        if last:
             try:
                 elapsed = (now - datetime.fromisoformat(last)).total_seconds()
             except ValueError:
