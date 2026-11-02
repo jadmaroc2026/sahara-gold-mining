@@ -2,7 +2,7 @@ import logging
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 from config import BOT_TOKEN, ADMIN_ID
-from database import init_db, ensure_user, get_user, claim_daily, grant_signup_referral_rewards
+from database import init_db, ensure_user, get_user, claim_daily, claim_mining, grant_signup_referral_rewards
 from services import get_upgrade_cost, upgrade_for_internal_balance
 from admin import admin_summary, user_details, user_ledger, set_frozen, pending_withdrawals, review_withdrawal
 from api_server import start_api, stop_api
@@ -52,7 +52,7 @@ async def mining(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ok, message, amount, remaining = claim_mining(update.effective_user.id)
     if ok:
         await update.message.reply_text(
-            f"⛏️ تمت مكافأة التعدين: +{amount} DRJ.\\n{message}"
+            f"⛏️ تمت مكافأة التعدين: +{amount} DRJ.\n{message}"
         )
     else:
         await update.message.reply_text(f"⛏️ {message}")
