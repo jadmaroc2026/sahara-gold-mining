@@ -25,7 +25,7 @@ def init_db():
           created_at TEXT NOT NULL,
           UNIQUE(user_id, reward_type)
         );
-        CREATE TABLE IF NOT EXISTS ledger(
+        CREATE TABLE IF NOT EXISTS monetag_events(\n          ymid TEXT PRIMARY KEY, user_id INTEGER NOT NULL, zone_id INTEGER NOT NULL,\n          sub_zone_id INTEGER, estimated_price REAL NOT NULL DEFAULT 0,\n          created_at TEXT NOT NULL\n        );\n        CREATE TABLE IF NOT EXISTS ledger(
           id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
           event TEXT NOT NULL, amount INTEGER NOT NULL, note TEXT,
           created_at TEXT NOT NULL
@@ -147,3 +147,18 @@ def claim_mining(uid):
         db.execute("INSERT INTO ledger(user_id,event,amount,note,created_at) VALUES(?,?,?,?,?)",
                    (uid, "mining_reward", amount, f"level {level}; internal test reward", stamp))
         return True, "تمت إضافة مكافأة التعدين إلى رصيدك التجريبي.", amount, 0
+
+
+def record_monetag_event(uid, ymid, zone_id, sub_zone_id, estimated_price):
+    """Store one paid Monetag impression. Duplicate ymid values are ignored."""
+    now = datetime.now(timezone.utc).isoformat()
+    with connect() as db:
+        user = db.execute("SELECT frozen FROM users WHERE user_id=?", (uid,)).fetchone()
+        if not user or user["frozen"]:
+            return False, 0
+        cur = db.execute(
+            "INSERT OR IGNORE INTO monetag_events(ymid,user_id,zone_id,sub_zone_id,estimated_price,created_at) VALUES(?,?,?,?,?,?)",
+            (ymid, uid, zone_id, sub_zone_id, estimated_price, now)
+        )
+        count = db.execute("SELECT COUNT(*) FROM monetag_events WHERE user_id=?", (uid,)).fetchone()[0]
+        return bool(cur.rowcount), count
