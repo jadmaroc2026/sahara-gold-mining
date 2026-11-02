@@ -49,10 +49,13 @@ async def daily(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("لقد حصلت على مكافأة الدخول اليوم بالفعل.")
 
 async def mining(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "⛏️ التعدين متوقف مؤقتاً. يتطلب 15 مشاهدة إعلان مع إثبات إكمال موثوق من مزود الإعلانات. "
-        "لن نسجل مشاهدات وهمية أو نمنح مكافآت دون إثبات."
-    )
+    ok, message, amount, remaining = claim_mining(update.effective_user.id)
+    if ok:
+        await update.message.reply_text(
+            f"⛏️ تمت مكافأة التعدين: +{amount} DRJ.\\n{message}"
+        )
+    else:
+        await update.message.reply_text(f"⛏️ {message}")
 
 async def level(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = get_user(update.effective_user.id)
