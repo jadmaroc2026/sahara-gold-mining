@@ -1,6 +1,6 @@
 import sqlite3
 from datetime import datetime, date, timedelta, timezone
-from config import DB_PATH, DAILY_REWARDS
+from config import DB_PATH, DAILY_REWARDS, MINING_INTERVAL_HOURS, MINING_REWARDS
 
 def connect():
     db = sqlite3.connect(DB_PATH)
@@ -118,3 +118,32 @@ def grant_signup_referral_rewards(uid):
                      f"{reward_type} for user {uid}", now)
                 )
         return True
+
+
+def claim_mining(uid):
+    now = datetime.now(timezone.utc)
+    with connect() as db:
+        db.execute("BEGIN IMMEDIATE")
+        row = db.execute("SELECT * FROM users WHERE user_id=?", (uid,)).fetchone()
+        if not row:
+            return False, "الحساب غير موجود.", 0, 0
+        if row["frozen"]:
+            return False, "الحساب مجمّد مؤقتاً.", 0, 0
+        level = max(1, min(int(row["level"]), len(MINING_REWARDS)))
+        last = row["last_mining"]
+        if last:
+            try:
+                elapsed = (now - datetime.fromisoformat(last)).total_seconds()
+            except ValueError:
+                elapsed = MINING_INTERVAL_HOURS * 3600
+            remaining = int(MINING_INTERVAL_HOURS * 3600 - elapsed)
+            if remaining > 0:
+                minutes = (remaining + 59) // 60
+                return False, f"المحاولة القادمة بعد {minutes} دقيقة تقريباً.", 0, remaining
+        amount = MINING_REWARDS[level - 1]
+        stamp = now.isoformat()
+        db.execute("UPDATE users SET balance=balance+?, last_mining=? WHERE user_id=?",
+                   (amount, stamp, uid))
+        db.execute("INSERT INTO ledger(user_id,event,amount,note,created_at) VALUES(?,?,?,?,?)",
+                   (uid, "mining_reward", amount, f"level {level}; internal test reward", stamp))
+        return True, "تمت إضافة مكافأة التعدين إلى رصيدك التجريبي.", amount, 0
